@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Factory Inventory Architecture</title>
+<style>
+  :root {
+    --bg: #f2f5f7;
+    --surface: #ffffff;
+    --surface-2: #e9eef2;
+    --border: #d5dee6;
+    --ink: #101827;
+    --ink-muted: #576475;
+    --ink-faint: #8695a6;
+    --accent: #0e7490;
+    --accent-strong: #0b5a70;
+    --accent-soft: #d7f1f6;
+    --ok: #15803d;
+    --ok-soft: #dcf5e3;
+    --info: #1d4ed8;
+    --info-soft: #dbe6fd;
+    --warn: #b45309;
+    --warn-soft: #faecd2;
+    --danger: #b91c1c;
+    --danger-soft: #fbdede;
+    --grid-dot: rgba(16, 24, 39, 0.08);
+    --shadow: 0 1px 2px rgba(16, 24, 39, 0.04), 0 8px 24px -12px rgba(16, 24, 39, 0.12);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1420;
+      --surface: #101c2c;
+      --surface-2: #16243a;
+      --border: #263850;
+      --ink: #e8eef4;
+      --ink-muted: #93a4b8;
+      --ink-faint: #5f7085;
+      --accent: #2dd4ee;
+      --accent-strong: #7be6f8;
+      --accent-soft: rgba(45, 212, 238, 0.14);
+      --ok: #4ade80;
+      --ok-soft: rgba(74, 222, 128, 0.14);
+      --info: #60a5fa;
+      --info-soft: rgba(96, 165, 250, 0.14);
+      --warn: #fbbf24;
+      --warn-soft: rgba(251, 191, 36, 0.14);
+      --danger: #f87171;
+      --danger-soft: rgba(248, 113, 113, 0.14);
+      --grid-dot: rgba(232, 238, 244, 0.08);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0b1420;
+    --surface: #101c2c;
+    --surface-2: #16243a;
+    --border: #263850;
+    --ink: #e8eef4;
+    --ink-muted: #93a4b8;
+    --ink-faint: #5f7085;
+    --accent: #2dd4ee;
+    --accent-strong: #7be6f8;
+    --accent-soft: rgba(45, 212, 238, 0.14);
+    --ok: #4ade80;
+    --ok-soft: rgba(74, 222, 128, 0.14);
+    --info: #60a5fa;
+    --info-soft: rgba(96, 165, 250, 0.14);
+    --warn: #fbbf24;
+    --warn-soft: rgba(251, 191, 36, 0.14);
+    --danger: #f87171;
+    --danger-soft: rgba(248, 113, 113, 0.14);
+    --grid-dot: rgba(232, 238, 244, 0.08);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+  }
+
+  a { color: var(--accent-strong); }
+
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 28px 96px;
+  }
+
+  /* ---------- header ---------- */
+
+  .hero {
+    background-image:
+      radial-gradient(var(--grid-dot) 1px, transparent 1px);
+    background-size: 22px 22px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 56px;
+  }
+
+  .hero-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 64px 28px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .eyebrow {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-strong);
+    font-weight: 600;
+  }
+
+  h1 {
+    font-size: 38px;
+    line-height: 1.1;
+    margin: 0;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .dek {
+    max-width: 62ch;
+    color: var(--ink-muted);
+    font-size: 17px;
+    margin: 0;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .meta-tag {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+    font-size: 12.5px;
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--ink-muted);
+    background: var(--surface);
+  }
+
+  /* ---------- sections ---------- */
+
+  section { margin-bottom: 64px; }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+  }
+
+  h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .section-note {
+    font-size: 13px;
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+
+  /* ---------- diagram figure ---------- */
+
+  figure { margin: 0; }
+
+  .diagram-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px;
+  }
+
+  .diagram-card svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    color: var(--ink-muted);
+  }
+
+  .diagram-card text { fill: currentColor; }
+
+  figcaption {
+    margin-top: 14px;
+    font-size: 14.5px;
+    color: var(--ink-muted);
+    max-width: 68ch;
+  }
+
+  /* ---------- tech stack ---------- */
+
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .stack-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .stack-card h3 {
+    margin: 0 0 4px;
+    font-size: 15px;
+  }
+
+  .stack-card .stack-role {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+  }
+
+  .stack-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .stack-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 14px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+  .stack-list li:first-child { border-top: none; padding-top: 0; }
+
+  .stack-list .name { color: var(--ink); }
+
+  .stack-list .ver {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+    font-size: 12px;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  /* ---------- data flow ---------- */
+
+  .flow-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .flow-item {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 16px;
+    padding: 16px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .flow-item:first-child { border-top: none; padding-top: 0; }
+  .flow-item:last-child { padding-bottom: 0; }
+
+  .flow-num {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+    color: var(--accent-strong);
+    font-weight: 700;
+  }
+
+  .flow-body p { margin: 4px 0 0; color: var(--ink-muted); font-size: 14.5px; }
+  .flow-body strong { color: var(--ink); font-weight: 600; }
+
+  .flow-body code {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+    font-size: 12.5px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  /* ---------- api table ---------- */
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 640px;
+    font-size: 14px;
+  }
+
+  thead th {
+    text-align: left;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody tr.group-row td {
+    background: var(--surface-2);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    font-weight: 700;
+    padding: 8px 16px;
+  }
+
+  .path {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+    font-size: 13px;
+  }
+
+  .method {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .method.get { color: var(--info); background: var(--info-soft); }
+  .method.post { color: var(--ok); background: var(--ok-soft); }
+  .method.patch { color: var(--warn); background: var(--warn-soft); }
+  .method.delete { color: var(--danger); background: var(--danger-soft); }
+
+  .desc { color: var(--ink-muted); }
+  .desc .unimplemented {
+    color: var(--danger);
+    font-size: 12px;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* ---------- project structure ---------- */
+
+  .tree-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .tree-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+  }
+
+  .tree-card h3 {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+  }
+
+  .tree {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, "Liberation Mono", monospace;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    margin: 0;
+    line-height: 1.9;
+    white-space: pre;
+  }
+
+  .tree .file { color: var(--ink); }
+  .tree .note { color: var(--ink-faint); font-style: italic; }
+
+  /* ---------- constraints ---------- */
+
+  .note-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .note-card {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    background: var(--surface);
+    padding: 14px 16px;
+  }
+
+  .note-card h4 {
+    margin: 0 0 6px;
+    font-size: 14px;
+  }
+
+  .note-card p {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--ink-muted);
+  }
+
+  footer {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 28px;
+    color: var(--ink-faint);
+    font-size: 12.5px;
+  }
+
+  @media (max-width: 720px) {
+    .stack-grid, .tree-grid, .note-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 30px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">System Architecture Reference</span>
+    <h1>Factory Inventory Management</h1>
+    <p class="dek">A Vue 3 single-page app talking to a FastAPI backend over plain HTTP. There is no database — the backend reads seven JSON files into memory once at startup and filters them on every request.</p>
+    <div class="meta-row">
+      <span class="meta-tag">Vue 3.4 + Vite</span>
+      <span class="meta-tag">FastAPI + Pydantic</span>
+      <span class="meta-tag">Python ≥3.11</span>
+      <span class="meta-tag">no database</span>
+      <span class="meta-tag">:3000 → :8001</span>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <section id="overview">
+    <div class="section-head"><h2>Request &amp; Data Lifecycle</h2></div>
+    <figure>
+      <div class="diagram-card">
+        <svg viewBox="0 0 1000 600" role="img" aria-label="A browser tab running the Vue SPA on port 3000 sends a filtered GET request across HTTP to the FastAPI server on port 8001; the server filters lists that mock_data.py loaded once from JSON files at startup, validates the result with Pydantic, and returns it as the HTTP response.">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+            </marker>
+            <marker id="arrowAccent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)" />
+            </marker>
+          </defs>
+
+          <!-- boundary: browser -->
+          <text x="60" y="38" font-size="12" letter-spacing="1.5" font-weight="700">BROWSER · localhost:3000</text>
+          <rect x="40" y="50" width="380" height="330" rx="10" fill="none" stroke="currentColor" stroke-opacity="0.35" stroke-dasharray="4 4" />
+
+          <rect x="70" y="80" width="320" height="64" rx="7" fill="var(--surface)" stroke="currentColor" />
+          <text x="230" y="106" text-anchor="middle" font-size="13" font-weight="700">Views</text>
+          <text x="230" y="124" text-anchor="middle" font-size="11" fill="var(--ink-muted)" font-family="ui-monospace, monospace">Dashboard · Orders · Inventory · Spending …</text>
+
+          <rect x="70" y="190" width="320" height="64" rx="7" fill="var(--surface)" stroke="currentColor" />
+          <text x="230" y="216" text-anchor="middle" font-size="13" font-weight="700" font-family="ui-monospace, monospace">useFilters()</text>
+          <text x="230" y="234" text-anchor="middle" font-size="11" fill="var(--ink-muted)">shared reactive filter state</text>
+
+          <rect x="70" y="300" width="320" height="64" rx="7" fill="var(--surface)" stroke="currentColor" />
+          <text x="230" y="326" text-anchor="middle" font-size="13" font-weight="700" font-family="ui-monospace, monospace">api.js</text>
+          <text x="230" y="344" text-anchor="middle" font-size="11" fill="var(--ink-muted)">axios HTTP client</text>
+
+          <line x1="230" y1="144" x2="230" y2="188" stroke="currentColor" marker-end="url(#arrow)" />
+          <text x="240" y="171" font-size="10.5" fill="var(--ink-muted)">filter changed</text>
+
+          <line x1="230" y1="254" x2="230" y2="298" stroke="currentColor" marker-end="url(#arrow)" />
+          <text x="240" y="281" font-size="10.5" fill="var(--ink-muted)">build query params</text>
+
+          <!-- boundary: server -->
+          <text x="560" y="38" font-size="12" letter-spacing="1.5" font-weight="700">API SERVER · localhost:8001</text>
+          <rect x="540" y="50" width="380" height="330" rx="10" fill="none" stroke="currentColor" stroke-opacity="0.35" stroke-dasharray="4 4" />
+
+          <rect x="570" y="80" width="320" height="64" rx="7" fill="var(--surface)" stroke="currentColor" />
+          <text x="730" y="106" text-anchor="middle" font-size="13" font-weight="700" font-family="ui-monospace, monospace">Routes /api/*</text>
+          <text x="730" y="124" text-anchor="middle" font-size="11" fill="var(--ink-muted)">main.py route handlers</text>
+
+          <rect x="570" y="190" width="320" height="64" rx="7" fill="var(--surface)" stroke="currentColor" />
+          <text x="730" y="216" text-anchor="middle" font-size="13" font-weight="700" font-family="ui-monospace, monospace">apply_filters()</text>
+          <text x="730" y="234" text-anchor="middle" font-size="11" fill="var(--ink-muted)">filter_by_month() for date ranges</text>
+
+          <rect x="570" y="300" width="320" height="64" rx="7" fill="var(--surface)" stroke="currentColor" />
+          <text x="730" y="326" text-anchor="middle" font-size="13" font-weight="700">Pydantic response_model</text>
+          <text x="730" y="344" text-anchor="middle" font-size="11" fill="var(--ink-muted)">validate + serialize</text>
+
+          <line x1="730" y1="144" x2="730" y2="188" stroke="currentColor" marker-end="url(#arrow)" />
+          <text x="740" y="171" font-size="10.5" fill="var(--ink-muted)">items + params</text>
+
+          <line x1="730" y1="254" x2="730" y2="298" stroke="currentColor" marker-end="url(#arrow)" />
+          <text x="740" y="281" font-size="10.5" fill="var(--ink-muted)">filtered list</text>
+
+          <!-- the boundary crossing: the one edge that matters -->
+          <path d="M390,332 H480 V112 H538" fill="none" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#arrowAccent)" />
+          <text x="410" y="105" font-size="11" fill="var(--accent)" font-family="ui-monospace, monospace" font-weight="700">GET /api/… (axios)</text>
+          <text x="410" y="119" font-size="10" fill="var(--ink-faint)">CORS: allow_origins="*"</text>
+
+          <path d="M540,332 H500 V112 H392" fill="none" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#arrowAccent)" />
+          <text x="410" y="335" font-size="11" fill="var(--accent)" font-family="ui-monospace, monospace" font-weight="700">200 OK · JSON</text>
+
+          <!-- in-memory data source -->
+          <rect x="650" y="430" width="160" height="52" rx="7" fill="var(--surface)" stroke="currentColor" />
+          <text x="730" y="452" text-anchor="middle" font-size="12" font-weight="700" font-family="ui-monospace, monospace">mock_data.py</text>
+          <text x="730" y="468" text-anchor="middle" font-size="10.5" fill="var(--ink-muted)">in-memory Python lists</text>
+
+          <rect x="650" y="514" width="160" height="52" rx="7" fill="var(--surface)" stroke="currentColor" />
+          <text x="730" y="536" text-anchor="middle" font-size="12" font-weight="700" font-family="ui-monospace, monospace">data/*.json</text>
+          <text x="730" y="552" text-anchor="middle" font-size="10.5" fill="var(--ink-muted)">7 files, source of truth</text>
+
+          <line x1="730" y1="514" x2="730" y2="484" stroke="currentColor" marker-end="url(#arrow)" />
+          <text x="740" y="502" font-size="10" fill="var(--ink-muted)">read once</text>
+
+          <path d="M730,430 V400 H950 V112 H922" fill="none" stroke="currentColor" marker-end="url(#arrow)" />
+          <text x="835" y="396" font-size="10.5" fill="var(--ink-muted)" text-anchor="middle">imported at startup — no database</text>
+        </svg>
+      </div>
+      <figcaption>The client and server are two separate processes joined only by HTTP (the two teal edges). Everything the server calls a "database" is <code class="mono">mock_data.py</code>: it reads seven JSON files into plain Python lists once, at import time, and every request just filters those lists in place.</figcaption>
+    </figure>
+  </section>
+
+  <section id="stack">
+    <div class="section-head"><h2>Tech Stack</h2></div>
+    <div class="stack-grid">
+      <div class="stack-card">
+        <h3>Client</h3>
+        <p class="stack-role">localhost:3000</p>
+        <ul class="stack-list">
+          <li><span class="name">Vue</span><span class="ver">3.4</span></li>
+          <li><span class="name">Vue Router</span><span class="ver">4.3</span></li>
+          <li><span class="name">Axios</span><span class="ver">1.6</span></li>
+          <li><span class="name">Vite</span><span class="ver">5.2</span></li>
+        </ul>
+      </div>
+      <div class="stack-card">
+        <h3>Server</h3>
+        <p class="stack-role">localhost:8001</p>
+        <ul class="stack-list">
+          <li><span class="name">FastAPI</span><span class="ver">≥0.110</span></li>
+          <li><span class="name">Uvicorn (ASGI)</span><span class="ver">≥0.24</span></li>
+          <li><span class="name">Pydantic</span><span class="ver">≥2.5</span></li>
+          <li><span class="name">Python</span><span class="ver">≥3.11</span></li>
+        </ul>
+      </div>
+      <div class="stack-card">
+        <h3>Data &amp; Tooling</h3>
+        <p class="stack-role">shared</p>
+        <ul class="stack-list">
+          <li><span class="name">JSON fixtures</span><span class="ver">7 files</span></li>
+          <li><span class="name">uv (venv + deps)</span><span class="ver">server</span></li>
+          <li><span class="name">pytest + httpx</span><span class="ver">tests/backend</span></li>
+          <li><span class="name">i18n locales</span><span class="ver">en · ja</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="flow">
+    <div class="section-head"><h2>Data Flow, Step by Step</h2></div>
+    <ol class="flow-list">
+      <li class="flow-item">
+        <span class="flow-num">01</span>
+        <div class="flow-body">
+          <strong>User adjusts a filter.</strong>
+          <p>Time Period, Warehouse, Category, or Order Status, set in <code>FilterBar.vue</code>.</p>
+        </div>
+      </li>
+      <li class="flow-item">
+        <span class="flow-num">02</span>
+        <div class="flow-body">
+          <strong>Shared state updates.</strong>
+          <p>The <code>useFilters()</code> composable holds the selection in refs so every view reads the same filter state.</p>
+        </div>
+      </li>
+      <li class="flow-item">
+        <span class="flow-num">03</span>
+        <div class="flow-body">
+          <strong>The view calls <code>api.js</code>.</strong>
+          <p>It builds a <code>URLSearchParams</code> query, skipping any filter left at <code>'all'</code>.</p>
+        </div>
+      </li>
+      <li class="flow-item">
+        <span class="flow-num">04</span>
+        <div class="flow-body">
+          <strong>Axios sends the request.</strong>
+          <p>A <code>GET</code> to <code>http://localhost:8001/api/…</code> — e.g. <code>/api/orders?warehouse=West&amp;month=Q3-2025</code>.</p>
+        </div>
+      </li>
+      <li class="flow-item">
+        <span class="flow-num">05</span>
+        <div class="flow-body">
+          <strong>FastAPI filters in memory.</strong>
+          <p><code>apply_filters()</code> and <code>filter_by_month()</code> run against the module-level lists — no query language, just list comprehensions.</p>
+        </div>
+      </li>
+      <li class="flow-item">
+        <span class="flow-num">06</span>
+        <div class="flow-body">
+          <strong>Pydantic validates the shape.</strong>
+          <p>Each route's <code>response_model</code> checks and serializes the result before it leaves the server.</p>
+        </div>
+      </li>
+      <li class="flow-item">
+        <span class="flow-num">07</span>
+        <div class="flow-body">
+          <strong>The view re-renders.</strong>
+          <p>JSON lands in a ref (<code>allOrders</code>, <code>inventoryItems</code>); a computed property derives the displayed shape.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section id="api">
+    <div class="section-head">
+      <h2>API Surface</h2>
+      <span class="section-note">from server/main.py</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th style="width:70px">Method</th><th style="width:230px">Path</th><th>Returns</th></tr>
+        </thead>
+        <tbody>
+          <tr class="group-row"><td colspan="3">Inventory</td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/inventory</td><td class="desc">List, filterable by <code class="mono">warehouse</code>, <code class="mono">category</code></td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/inventory/{id}</td><td class="desc">Single item, 404 if missing</td></tr>
+
+          <tr class="group-row"><td colspan="3">Orders</td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/orders</td><td class="desc">List, filterable by warehouse, category, status, month</td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/orders/{id}</td><td class="desc">Single order, 404 if missing</td></tr>
+
+          <tr class="group-row"><td colspan="3">Demand &amp; Backlog</td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/demand</td><td class="desc">Demand forecasts, unfiltered</td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/backlog</td><td class="desc">Backlog items, annotated with <code class="mono">has_purchase_order</code></td></tr>
+
+          <tr class="group-row"><td colspan="3">Dashboard &amp; Reports</td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/dashboard/summary</td><td class="desc">Inventory value, low-stock count, pending orders — all four filters</td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/reports/quarterly</td><td class="desc">Revenue &amp; fulfillment rate per quarter, computed from orders</td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/reports/monthly-trends</td><td class="desc">Order count &amp; revenue per month</td></tr>
+
+          <tr class="group-row"><td colspan="3">Spending</td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/spending/summary</td><td class="desc">Top-line spending totals</td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/spending/monthly</td><td class="desc">Spending by month</td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/spending/categories</td><td class="desc">Spending by category</td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/spending/transactions</td><td class="desc">Recent transactions</td></tr>
+
+          <tr class="group-row"><td colspan="3">Called by the client, not implemented in main.py</td></tr>
+          <tr><td><span class="method get">GET</span></td><td class="path">/api/tasks</td><td class="desc">Read in <code class="mono">App.vue</code>'s <code class="mono">loadTasks()</code><span class="unimplemented">fails silently — caught and logged, UI falls back to mock tasks only</span></td></tr>
+          <tr><td><span class="method post">POST</span></td><td class="path">/api/purchase-orders</td><td class="desc">Called from the backlog purchase-order flow<span class="unimplemented">no matching route exists yet</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="structure">
+    <div class="section-head"><h2>Project Structure</h2></div>
+    <div class="tree-grid">
+      <div class="tree-card">
+        <h3>client/</h3>
+        <pre class="tree">src/
+├── views/          <span class="note">6 route-level pages</span>
+├── components/     <span class="note">FilterBar, modals, nav</span>
+├── composables/     useAuth · useFilters · useI18n
+├── locales/         en.js · ja.js
+├── <span class="file">api.js</span>          <span class="note">axios client, one method per endpoint</span>
+└── <span class="file">main.js</span>         <span class="note">router + app mount</span></pre>
+      </div>
+      <div class="tree-card">
+        <h3>server/</h3>
+        <pre class="tree"><span class="file">main.py</span>            <span class="note">FastAPI app, every route</span>
+<span class="file">mock_data.py</span>      <span class="note">loads data/*.json into lists</span>
+<span class="file">generate_data.py</span>  <span class="note">produced the sample fixtures</span>
+data/
+└── *.json          <span class="note">7 fixture files</span>
+
+../tests/backend/  <span class="note">pytest + TestClient</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="constraints">
+    <div class="section-head"><h2>Constraints Worth Knowing</h2></div>
+    <div class="note-grid">
+      <div class="note-card">
+        <h4>No persistence</h4>
+        <p>Everything lives in Python lists for the life of the process. Restarting <code class="mono">main.py</code> resets all state back to the JSON fixtures.</p>
+      </div>
+      <div class="note-card">
+        <h4>No auth, open CORS</h4>
+        <p><code class="mono">allow_origins=["*"]</code> and no login check — intentional for a local demo, not safe to deploy as-is.</p>
+      </div>
+      <div class="note-card">
+        <h4>One filter system, four axes</h4>
+        <p>Time Period, Warehouse, Category, and Order Status pass through as query params to nearly every endpoint; inventory has no time axis.</p>
+      </div>
+      <div class="note-card">
+        <h4>Public repo hygiene</h4>
+        <p><code class="mono">client/.npmrc</code> pins the public npm registry and the client lockfile is gitignored, so a private registry never leaks into a commit.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  Generated from a read-through of <code class="mono">server/main.py</code>, <code class="mono">server/mock_data.py</code>, <code class="mono">client/src/api.js</code>, and <code class="mono">client/src/main.js</code>.
+</footer>
+
+</body>
+</html>
