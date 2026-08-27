@@ -6,6 +6,7 @@ export default {
     orders: 'Orders',
     finance: 'Finance',
     demandForecast: 'Demand Forecast',
+    restocking: 'Restocking',
     companyName: 'Catalyst Components',
     subtitle: 'Inventory Management System'
   },
@@ -125,8 +126,10 @@ export default {
       totalValue: 'Total Value',
       status: 'Status',
       expectedDelivery: 'Expected Delivery',
-      actualDelivery: 'Actual Delivery'
-    }
+      actualDelivery: 'Actual Delivery',
+      leadTimeDays: 'Lead Time (days)'
+    },
+    submittedOrders: 'Submitted Orders'
   },
 
   // Finance/Spending
@@ -185,6 +188,36 @@ export default {
       change: 'Change',
       trend: 'Trend',
       period: 'Period'
+    }
+  },
+
+  // Restocking
+  restocking: {
+    title: 'Restocking',
+    description: 'Get budget-based restock recommendations for items with rising demand',
+    budgetLabel: 'Restock Budget',
+    estimatedCost: 'Estimated Cost',
+    remainingBudget: 'Remaining Budget',
+    itemsRecommended: 'Items Recommended',
+    recommendationsTitle: 'Recommended Items',
+    noRecommendations: 'No items can be recommended within this budget. Try increasing the budget or changing the warehouse filter.',
+    fullyFunded: 'Fully Funded',
+    partial: 'Partial',
+    placeOrder: 'Place Order',
+    placingOrder: 'Placing Order...',
+    submitSuccess: 'Order {orderNumber} placed successfully.',
+    submitError: 'Failed to place order',
+    table: {
+      sku: 'SKU',
+      itemName: 'Item Name',
+      warehouse: 'Warehouse',
+      currentDemand: 'Current Demand',
+      forecastedDemand: 'Forecasted Demand',
+      gap: 'Gap',
+      unitCost: 'Unit Cost',
+      recommendedQty: 'Recommended Qty',
+      estimatedCost: 'Estimated Cost',
+      funding: 'Funding'
     }
   },
 
